@@ -49,7 +49,7 @@ class Predictor(BasePredictor):
         #),
         negative_prompt: str = Input(
             description="Negative Prompt",
-            default="worst quality, inconsistent motion, blurry, jittery, distorted"
+            default="watermark, text, deformed, worst quality, inconsistent motion, blurry, jittery, distorted"
         ),
         outWidth: int = Input(
             description="width of output",
@@ -90,7 +90,7 @@ class Predictor(BasePredictor):
         seed: int = Input(
             description="Random seed. Leave blank to randomize the seed", default=None
         ),
-    ) -> List[Path]:
+    ) -> Path:
         """Run a single prediction on the model"""
         while (myprompt[-1] == " ") or (myprompt[-1] == "\n"): #remove user whitespaces
             myprompt = myprompt[:-1]
