@@ -1,6 +1,7 @@
 # Configuration for Cog
 build:
   gpu: true
+  cuda: "12.1"
   python_version: "3.11"
   system_packages:
     - "libgl1-mesa-glx"
