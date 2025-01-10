@@ -7,6 +7,7 @@ import shutil
 from PIL import Image
 from typing import List
 from diffusers import StableDiffusionXLPipeline
+import math
 
 base_model_path = "Lightricks/LTX-Video"
 #LoRA_PATH = "hfpath/sdxl-beethoven-spectrograms"
@@ -87,6 +88,18 @@ class Predictor(BasePredictor):
             description="Output FPS",
             default=24,
         ),
+        decodeTimestepParam: float = Input(
+            description="decodeTimestepParam",
+            ge=0.005,
+            le=1.0,
+            default=0.030
+        ),
+        decodeNoiseScaleParam: float = Input(
+            description="decodeNoiseScaleParam",
+            ge=0.0005,
+            le=1.0,
+            default=0.0250
+        ),
         seed: int = Input(
             description="Random seed. Leave blank to randomize the seed", default=None
         ),
@@ -99,26 +112,46 @@ class Predictor(BasePredictor):
             seed = int.from_bytes(os.urandom(2), "big")
         print(f"Using seed: {seed}")
 
-        video = self.pipe(
+        if outWidth % 32 != 0:
+            outWidth = math.floor(outWidth/32)*32
+            print(f"WARNING: outWidth must be a multiple of 32, resizing outWidth to {outWidth}")
+        if outHeight % 32 != 0:
+            outHeight = math.floor(outHeight/32)*32
+            print(f"WARNING: outHeight must be a multiple of 32, resizing outHeight to {outHeight}")
+
+        #video = self.pipe(
+        #    prompt=myprompt,
+        #    negative_prompt=negative_prompt,
+        #    width=outWidth,
+        #    height=outHeight,
+        #    num_frames=num_frames,
+        #    decode_timestep=0.03,
+        #    decode_noise_scale=0.025,
+        #    num_inference_steps=num_inference_steps,
+        #    guidance_scale=guidanceScale,
+        #    num_videos_per_prompt=num_outputs,
+        #).frames[0]
+
+        videosObj = self.pipe(
             prompt=myprompt,
             negative_prompt=negative_prompt,
             width=outWidth,
             height=outHeight,
             num_frames=num_frames,
-            decode_timestep=0.03,
-            decode_noise_scale=0.025,
+            decode_timestep=decodeTimestepParam,
+            decode_noise_scale=decodeNoiseScaleParam,
             num_inference_steps=num_inference_steps,
             guidance_scale=guidanceScale,
             num_videos_per_prompt=num_outputs,
-        ).frames[0]
+        ).frames
 
-        output_filename = "/tmp/output.mp4"
-        export_to_video(video, output_filename, fps=outFPS)
+        #output_filename = "/tmp/output.mp4"
+        #export_to_video(video, output_filename, fps=outFPS)
         
-        #output_paths = []
-        #for i, _ in enumerate(imagesObj):
-        #    output_path = f"/tmp/out-{i}.png"
-        #    imagesObj[i].save(output_path)
-        #    output_paths.append(Path(output_path))
+        output_paths = []
+        for i, _ in enumerate(videosObj):
+            output_path = f"/tmp/out-{i}.mp4"
+            export_to_video(videosObj[i], output_path, fps=outFPS)
+            output_paths.append(Path(output_path))
             
-        return Path(output_filename)
+        return output_paths
