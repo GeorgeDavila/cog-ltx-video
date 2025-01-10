@@ -78,7 +78,7 @@ class Predictor(BasePredictor):
         num_outputs: int = Input(
             description="Number of outputs.",
             ge=1,
-            le=8,
+            le=4,
             default=1,
         ),
         num_inference_steps: int = Input(
@@ -103,7 +103,7 @@ class Predictor(BasePredictor):
         seed: int = Input(
             description="Random seed. Leave blank to randomize the seed", default=None
         ),
-    ) -> Path:
+    ) -> List[Path]:
         """Run a single prediction on the model"""
         while (myprompt[-1] == " ") or (myprompt[-1] == "\n"): #remove user whitespaces
             myprompt = myprompt[:-1]
